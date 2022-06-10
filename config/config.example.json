@@ -1,0 +1,8 @@
+{
+    "jackett_scheme": "https",
+    "jackett_host": "yourjackett.com",
+    "jackett_ip": "127.0.0.1",
+    "jackett_port": "443",
+    "tmdb_api_key": "your tmdb api key",
+    "tmdb_search_url": "https://api.themoviedb.org/3/search/tv"
+}

@@ -1,7 +1,5 @@
 # sonarr-hijack
 
-项目 pkg 复用了其他项目的包，该项目核心逻辑用到的很少
-
 ## 配置文件
 
 配置文件路径需为 `config/config.json`
@@ -23,8 +21,6 @@
 - `jackett_ip` 为可选项，项目搭建在本地时，用于跳过域名解析步骤
 
 ## 编译运行
-
-修改 `go.mod` 中的 `E:\sonarr-hijack` 为自己的路径
 
 项目运行需指定 log 参数
 

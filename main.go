@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 
+	"sonarr-hijack/app/proxy"
+
 	"github.com/gin-gonic/gin"
+	_ "github.com/ipuppet/gtools/flags"
 	"golang.org/x/sync/errgroup"
-	"ultagic.com/app/proxy"
-	_ "ultagic.com/pkg/flags"
 )
 
 var (

@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"ultagic.com/pkg/config"
-	"ultagic.com/pkg/utils"
+	"github.com/ipuppet/gtools/config"
+	"github.com/ipuppet/gtools/utils"
 )
 
 var (

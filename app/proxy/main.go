@@ -3,9 +3,10 @@ package proxy
 import (
 	"net/http"
 
+	"sonarr-hijack/app/proxy/handler"
+
 	"github.com/gin-gonic/gin"
-	"ultagic.com/app/proxy/handler"
-	"ultagic.com/pkg/server"
+	"github.com/ipuppet/gtools/server"
 )
 
 func GetServer(addr string) *http.Server {

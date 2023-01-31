@@ -1,9 +1,9 @@
-package handler
+package logic
 
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ipuppet/gtools/config"
 	"github.com/ipuppet/gtools/utils"
 )
@@ -33,7 +32,7 @@ func init() {
 	httpClient = InitHttpClient()
 }
 
-func getConfig(key string) string {
+func getConfigForKey(key string) string {
 	value, err := conf.Get(key)
 	if err != nil {
 		log.Fatal(err)
@@ -49,8 +48,8 @@ func InitHttpClient() *http.Client {
 	}
 	transport := http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			jackett_host := getConfig("jackett_host")
-			jackett_port := getConfig("jackett_port")
+			jackett_host := getConfigForKey("jackett_host")
+			jackett_port := getConfigForKey("jackett_port")
 
 			if addr == jackett_host+":"+jackett_port {
 				_jackett_ip, err := conf.Get("jackett_ip")
@@ -81,10 +80,10 @@ func ParseQuery(q string, season int, ep int) string {
 		}
 	}
 
-	u, _ := url.Parse(getConfig("tmdb_search_url"))
+	u, _ := url.Parse(getConfigForKey("tmdb_search_url"))
 
 	params := url.Values{}
-	tmdb_api_key := getConfig("tmdb_api_key")
+	tmdb_api_key := getConfigForKey("tmdb_api_key")
 	params.Set("api_key", tmdb_api_key)
 	params.Set("query", q)
 	params.Set("language", "zh")
@@ -96,7 +95,7 @@ func ParseQuery(q string, season int, ep int) string {
 	}
 
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	var tmdb map[string]interface{}
 	err = json.Unmarshal(body, &tmdb)
@@ -132,11 +131,11 @@ func ParseQuery(q string, season int, ep int) string {
 }
 
 func Proxy(request *http.Request) (*http.Response, error) {
-	jackett_host := getConfig("jackett_host")
-	jackett_port := getConfig("jackett_port")
+	jackett_host := getConfigForKey("jackett_host")
+	jackett_port := getConfigForKey("jackett_port")
 	host := jackett_host + ":" + jackett_port
 
-	jackett_scheme := getConfig("jackett_scheme")
+	jackett_scheme := getConfigForKey("jackett_scheme")
 	targetUrl := jackett_scheme + "://" + host + request.URL.String()
 
 	// 构造请求
@@ -180,48 +179,4 @@ func Proxy(request *http.Request) (*http.Response, error) {
 	}
 
 	return resp, nil
-}
-
-func LoadRouters(e *gin.Engine) {
-	e.Any("/jackett/api/:apiVer/indexers/:indexer/results/:feedType/api", func(c *gin.Context) {
-		// 以下参数暂时没用
-		type UriParam struct {
-			ApiVer   string `uri:"apiVer" binding:"required"`
-			Indexer  string `uri:"indexer" binding:"required"`
-			FeedType string `uri:"feedType" binding:"required"`
-		}
-		var uriParam UriParam
-		if err := c.ShouldBindUri(&uriParam); err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-
-		resp, err := Proxy(c.Request)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-
-		defer resp.Body.Close()
-
-		// header
-		for key, values := range resp.Header {
-			if len(values) == 1 {
-				c.Writer.Header().Set(key, values[0])
-			} else {
-				c.Writer.Header().Set(key, values[0])
-				for _, value := range values[1:] {
-					c.Writer.Header().Add(key, value)
-				}
-			}
-		}
-
-		c.DataFromReader(
-			resp.StatusCode,
-			resp.ContentLength,
-			resp.Header.Get("Content-Type"),
-			resp.Body,
-			nil,
-		)
-	})
 }
